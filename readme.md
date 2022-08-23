@@ -9,3 +9,9 @@ $ source venv/bin/activate
 (venv) $ python3 -m pip install requirements.txt
 (venv) $ python3 read-only-sensor.py
 ```
+
+### If you suffer from cannot find Flask 2.2.2
+
+```
+$ python3 -m pip install --upgrade pip
+```
