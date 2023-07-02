@@ -1,0 +1,61 @@
+{
+	"info": {
+		"_postman_id": "1f6ff969-23c9-44c7-9328-f60bfad470a8",
+		"name": "Loopback http://127.0.0.1:8088/v3/device",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "22679704"
+	},
+	"item": [
+		{
+			"name": "[Patch] Control onOff / level / cct ONOFF",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "[Patch] Control onOff / level / cct LEVEL",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "[Patch] Control onOff / level / cct CCT",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"device\": {\n        \"id\": 1,\n        \"uniAddress\": 4,\n        \"state\": {\n            \"cct\": 255\n        }\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8088/v3/device",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8088",
+					"path": [
+						"v3",
+						"device"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
