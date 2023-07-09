@@ -20,6 +20,39 @@ class LightState:
 def home():
     return "<p>This site is a prototype for Delta server.</p>"
 
+@app.route('/v3/device/uuid/<string:name>/', methods=['GET'])
+def get_sensor_status_uuid(name: str):
+    if request.method == 'GET':
+        global my_state
+        try:
+            if my_state is None:
+                my_state = LightState()  # Bad code [FixIt later], I just wanna have a singleton...
+        except NameError as e:
+            my_state = LightState()
+        print("get_sensor_status_uuid : " + name)
+        response = Response(mimetype='application/json')
+        response.status_code = 200
+        response.data = json.dumps({
+            "status": "success",
+            "code": 200,
+            "message": "",
+            "payload": {
+                "devices": [
+                    {
+                        "id": 1,
+                        "name": "DT8_1",
+                        "uniAddress": 4,
+                        "uuid": "68b542e0-244b-045c-4460-fa2687d22507",
+                        "state": {
+                            "onOff": my_state.onOff_1,
+                            "level": my_state.level_1,
+                            "cct": my_state.cct_1
+                        }
+                    }
+                ]
+            }
+        })
+        return response
 
 @app.route('/v3/device', methods=['GET', 'PATCH'])
 def get_sensor_status():
@@ -30,7 +63,7 @@ def get_sensor_status():
     except NameError as e:
         my_state = LightState()
 
-    if request.method == 'Get':
+    if request.method == 'GET':
         response = Response(mimetype='application/json')
         response.status_code = 200
         response.data = json.dumps({
