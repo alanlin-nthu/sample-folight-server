@@ -1,8 +1,59 @@
+from dataclasses import dataclass
 from flask import Flask, Response, request
 import json
 
 app = Flask(__name__)
 unique_id = 0xdddd
+
+
+@dataclass
+class DeltaLightData:
+    """ Delta data stored in the DataUpdateCoordinator."""
+    uuid: str
+    on_off: int
+    level: int
+    cct: int
+    id: int
+    uniAddress: int
+    name: str
+
+    def __str__(self):
+        return "My Light is {uuid} on:{on_off} l:{level} cct:{cct} id:{id} u{uniAddress} name{name}" \
+            .format(uuid=self.uuid,
+                    on_off=self.on_off,
+                    level=self.level,
+                    cct=self.cct,
+                    id=self.id,
+                    uniAddress=self.uniAddress,
+                    name=self.name
+                    )
+
+
+light_err = DeltaLightData(uuid="error",
+                           on_off=-1,
+                           level=-1,
+                           cct=-1,
+                           id=-1,
+                           uniAddress=-1,
+                           name="alan_err")
+
+light1 = DeltaLightData(uuid="68b542e0-244b-045c-4460-fa2687d22507",
+                        on_off=1,
+                        level=1,
+                        cct=1,
+                        id=1,
+                        uniAddress=4,
+                        name="alan1")
+
+light2 = DeltaLightData(uuid="24219b10-e7cf-93cc-6cb6-e7c906b22507",
+                        on_off=2,
+                        level=2,
+                        cct=2,
+                        id=2,
+                        uniAddress=5,
+                        name="alan2")
+
+all_light: [DeltaLightData] = [light1, light2]
 
 
 class LightState:
@@ -16,9 +67,11 @@ class LightState:
         print("level_1: " + str(self.level_1))
         print("cct_1: " + str(self.onOff_1))
 
+
 @app.route('/', methods=['GET'])
 def home():
     return "<p>This site is a prototype for Delta server.</p>"
+
 
 @app.route('/v3/device/uuid/<string:name>/', methods=['GET'])
 def get_sensor_status_uuid(name: str):
@@ -30,6 +83,13 @@ def get_sensor_status_uuid(name: str):
         except NameError as e:
             my_state = LightState()
         print("get_sensor_status_uuid : " + name)
+
+        chosen_light = light_err
+        for light in all_light:
+            if light.uuid == name:
+                chosen_light = light
+                print("get_sensor_status_uuid chosen ok")
+
         response = Response(mimetype='application/json')
         response.status_code = 200
         response.data = json.dumps({
@@ -39,30 +99,27 @@ def get_sensor_status_uuid(name: str):
             "payload": {
                 "devices": [
                     {
-                        "id": 1,
-                        "name": "DT8_1",
-                        "uniAddress": 4,
-                        "uuid": "68b542e0-244b-045c-4460-fa2687d22507",
+                        "id": chosen_light.id,
+                        "name": chosen_light.name,
+                        "uniAddress": chosen_light.uniAddress,
+                        "uuid": chosen_light.uuid,
                         "state": {
-                            "onOff": my_state.onOff_1,
-                            "level": my_state.level_1,
-                            "cct": my_state.cct_1
+                            "onOff": chosen_light.on_off,
+                            "level": chosen_light.level,
+                            "cct": chosen_light.cct
                         }
                     }
                 ]
             }
         })
+        print("Resp single light uuid light++")
+        print(response.data)
+        print("Resp single light uuid light--")
         return response
+
 
 @app.route('/v3/device', methods=['GET', 'PATCH'])
 def get_sensor_status():
-    global my_state
-    try:
-        if my_state is None:
-            my_state = LightState()  # Bad code [FixIt later], I just wanna have a singleton...
-    except NameError as e:
-        my_state = LightState()
-
     if request.method == 'GET':
         response = Response(mimetype='application/json')
         response.status_code = 200
@@ -73,30 +130,34 @@ def get_sensor_status():
             "payload": {
                 "devices": [
                     {
-                        "id": 1,
-                        "name": "DT8_1",
-                        "uniAddress": 4,
-                        "uuid": "68b542e0-244b-045c-4460-fa2687d22507",
+                        "id": light1.id,
+                        "name": light1.name,
+                        "uniAddress": light1.uniAddress,
+                        "uuid": light1.uuid,
                         "state": {
-                            "onOff": my_state.onOff_1,
-                            "level": my_state.level_1,
-                            "cct": my_state.cct_1
+                            "onOff": light1.on_off,
+                            "level": light1.level,
+                            "cct": light1.cct,
                         }
                     },
                     {
-                        "id": 2,
-                        "name": "DT6_2",
-                        "uniAddress": 8,
-                        "uuid": "24219b10-e7cf-93cc-6cb6-e7c906b22507",
+                        "id": light2.id,
+                        "name": light2.name,
+                        "uniAddress": light2.uniAddress,
+                        "uuid": light2.uuid,
                         "state": {
-                            "onOff": 1,
-                            "level": 255,
-                            "cct": 0
+                            "onOff": light2.on_off,
+                            "level": light2.level,
+                            "cct": light2.cct,
                         }
                     }
                 ]
             }
         })
+        print("Resp All light++")
+        print(response.data)
+        print("Resp All light--")
+        return response
 
     if request.method == 'PATCH':
 
@@ -111,21 +172,21 @@ def get_sensor_status():
         # }"
 
         request_payload = json.loads(request.data)
-        print("Req++")
         print(request_payload["device"]["state"])
+        chosen_light = light_err
+        for light in all_light:
+            if light.id == request_payload["device"]["id"] and light.uniAddress == request_payload["device"]["uniAddress"]:
+                chosen_light = light
+
         for control_type, control_value in request_payload["device"]["state"].items():
             if control_type == "onOff":
-                my_state.onOff_1 = control_value
-                print("Control: onOff == " + str(my_state.onOff_1))
+                chosen_light.on_off = control_value
             elif control_type == "level":
-                my_state.level_1 = control_value
-                print("Control: level == " + str(my_state.level_1))
+                chosen_light.level = control_value
             elif control_type == "cct":
-                my_state.cct_1 = control_value
-                print("Control: cct == " + str(my_state.cct_1))
+                chosen_light.cct = control_value
+            print("Update:" + chosen_light.__str__())
             break
-
-        print("Req--")
 
         # response return back the payload #
         response = Response(mimetype='application/json')
@@ -137,23 +198,21 @@ def get_sensor_status():
             "payload": {
                 "devices": [
                     {
-                        "id": 1,
+                        "id": chosen_light.id,
                         "deviceDescription": "0",
                         "state": {
-                            "onOff": my_state.onOff_1,
-                            "level": my_state.level_1,
-                            "cct": my_state.cct_1
+                            "onOff": chosen_light.on_off,
+                            "level": chosen_light.level,
+                            "cct": chosen_light.cct
                         }
                     }
                 ]
             }
         })
-
-    print("Resp++")
-    print(response.data)
-    print("Resp--")
-
-    return response
+        print("Resp Single ++")
+        print(response.data)
+        print("Resp Single --")
+        return response
 
 
 app.run(host='0.0.0.0', port=8088)
