@@ -46,7 +46,7 @@ light1 = DeltaLightData(uuid="68b542e0-244b-045c-4460-fa2687d22507",
                         name="alan1")
 
 light2 = DeltaLightData(uuid="24219b10-e7cf-93cc-6cb6-e7c906b22507",
-                        on_off=2,
+                        on_off=0,
                         level=2,
                         cct=2,
                         id=2,
